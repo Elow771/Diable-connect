@@ -28,6 +28,9 @@ jobs:
         xcodebuild -scheme DiaBLE \
           -configuration Release \
           -archivePath build/DiaBLE.xcarchive \
+          -allowProvisioningUpdates \
+          CODE_SIGN_IDENTITY="" \
+          CODE_SIGNING_REQUIRED=NO \
           archive
     
     - name: Export IPA
@@ -35,7 +38,8 @@ jobs:
         xcodebuild -exportArchive \
           -archivePath build/DiaBLE.xcarchive \
           -exportOptionsPlist ExportOptions.plist \
-          -exportPath build/
+          -exportPath build/ \
+          -allowProvisioningUpdates
     
     - name: Upload IPA artifact
       uses: actions/upload-artifact@v4
