@@ -23,7 +23,7 @@ jobs:
           pod install
         fi
     
-    - name: Build IPA
+    - name: Build IPA (Release with optimizations)
       run: |
         mkdir -p build/ipa
         xcodebuild -scheme DiaBLE \
@@ -33,9 +33,10 @@ jobs:
           -allowProvisioningUpdates \
           CODE_SIGN_IDENTITY="" \
           CODE_SIGNING_REQUIRED=NO \
+          STRIP_INSTALLED_PRODUCT=YES \
+          DEBUG_INFORMATION_FORMAT=dwarf \
           build
         
-        # Create a fake IPA (just the build output)
         cd build && zip -r ipa/DiaBLE.ipa * && cd ..
     
     - name: Upload IPA artifact
