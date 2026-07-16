@@ -23,19 +23,29 @@ jobs:
           CODE_SIGN_IDENTITY="" \
           CODE_SIGNING_REQUIRED=NO
     
-    - name: Create IPA from app
+    - name: Find built app
       run: |
-        APP_PATH="build/Build/Products/Release-iphoneos/DiaBLE.app"
-        IPA_PATH="build/DiaBLE.ipa"
+        echo "Looking for built app..."
+        find build -name "*.app" -type d
+        ls -la build/Build/Products/ 2>/dev/null || echo "Release-iphoneos not found"
+        find build -name "DiaBLE*" -type d | head -20
+    
+    - name: Create IPA
+      run: |
+        # Find the actual app location
+        APP_PATH=$(find build -name "DiaBLE.app" -type d | head -1)
         
-        mkdir -p "$IPA_PATH/Payload"
-        cp -r "$APP_PATH" "$IPA_PATH/Payload/"
+        if [ -z "$APP_PATH" ]; then
+          echo "ERROR: DiaBLE.app not found!"
+          exit 1
+        fi
         
-        # Create minimal Info.plist if needed
-        cd "$IPA_PATH"
+        echo "Found app at: $APP_PATH"
+        
+        mkdir -p build/Payload
+        cp -r "$APP_PATH" build/Payload/
+        cd build
         zip -r DiaBLE.ipa Payload/
-        mv DiaBLE.ipa ../
-        cd ..
     
     - name: Upload IPA
       uses: actions/upload-artifact@v4
