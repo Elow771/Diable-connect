@@ -1,0 +1,44 @@
+name: Build iOS App
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  build:
+    runs-on: macos-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
+    - name: Select Xcode version
+      run: sudo xcode-select --switch /Applications/Xcode.app/Contents/Developer
+    
+    - name: Install dependencies (if using CocoaPods)
+      run: |
+        if [ -f "Podfile" ]; then
+          pod install
+        fi
+    
+    - name: Build archive
+      run: |
+        xcodebuild -scheme DiaBLE \
+          -configuration Release \
+          -archivePath build/DiaBLE.xcarchive \
+          archive
+    
+    - name: Export IPA
+      run: |
+        xcodebuild -exportArchive \
+          -archivePath build/DiaBLE.xcarchive \
+          -exportOptionsPlist ExportOptions.plist \
+          -exportPath build/
+    
+    - name: Upload IPA artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: DiaBLE.ipa
+        path: build/DiaBLE.ipa
