@@ -23,24 +23,35 @@ jobs:
           pod install
         fi
     
-    - name: Build IPA (Release with optimizations)
+    - name: Build and Archive
       run: |
-        mkdir -p build/ipa
-        xcodebuild -scheme DiaBLE \
+        xcodebuild archive \
+          -scheme DiaBLE \
           -configuration Release \
-          -derivedDataPath build \
+          -archivePath build/DiaBLE.xcarchive \
           -verbose \
-          -allowProvisioningUpdates \
           CODE_SIGN_IDENTITY="" \
           CODE_SIGNING_REQUIRED=NO \
-          STRIP_INSTALLED_PRODUCT=YES \
-          DEBUG_INFORMATION_FORMAT=dwarf \
-          build
-        
-        cd build && zip -r ipa/DiaBLE.ipa * && cd ..
+          PROVISIONING_PROFILE="" \
+          PROVISIONING_PROFILE_SPECIFIER=""
     
-    - name: Upload IPA artifact
+    - name: Export IPA
+      run: |
+        xcodebuild -exportArchive \
+          -archivePath build/DiaBLE.xcarchive \
+          -exportOptionsPlist ExportOptions.plist \
+          -exportPath build/export \
+          -allowProvisioningUpdates || true
+        
+        # If export fails, try with no signing
+        if [ ! -f "build/export/DiaBLE.ipa" ]; then
+          mkdir -p build/export
+          cd build/DiaBLE.xcarchive/Products/Applications
+          zip -r ../../../export/DiaBLE.ipa DiaBLE.app
+        fi
+    
+    - name: Upload IPA
       uses: actions/upload-artifact@v4
       with:
         name: DiaBLE.ipa
-        path: build/ipa/DiaBLE.ipa
+        path: build/export/DiaBLE.ipa
