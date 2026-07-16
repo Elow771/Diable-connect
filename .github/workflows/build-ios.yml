@@ -20,32 +20,40 @@ jobs:
           -scheme DiaBLE \
           -configuration Release \
           -derivedDataPath build \
+          -sdk iphoneos \
           CODE_SIGN_IDENTITY="" \
           CODE_SIGNING_REQUIRED=NO
     
-    - name: Find built app
-      run: |
-        echo "Looking for built app..."
-        find build -name "*.app" -type d
-        ls -la build/Build/Products/ 2>/dev/null || echo "Release-iphoneos not found"
-        find build -name "DiaBLE*" -type d | head -20
-    
     - name: Create IPA
       run: |
-        # Find the actual app location
+        # Find the app
         APP_PATH=$(find build -name "DiaBLE.app" -type d | head -1)
         
         if [ -z "$APP_PATH" ]; then
-          echo "ERROR: DiaBLE.app not found!"
+          echo "ERROR: App not found!"
+          find build -type d -name "*.app"
           exit 1
         fi
         
-        echo "Found app at: $APP_PATH"
+        echo "Using app: $APP_PATH"
         
-        mkdir -p build/Payload
-        cp -r "$APP_PATH" build/Payload/
-        cd build
-        zip -r DiaBLE.ipa Payload/
+        # Create IPA structure
+        mkdir -p build/ipa/Payload
+        cp -r "$APP_PATH" build/ipa/Payload/
+        
+        # Verify Info.plist exists
+        if [ ! -f "build/ipa/Payload/DiaBLE.app/Info.plist" ]; then
+          echo "ERROR: Info.plist not found in app!"
+          ls -la "$APP_PATH/"
+          exit 1
+        fi
+        
+        # Create the IPA
+        cd build/ipa
+        zip -r ../DiaBLE.ipa Payload/
+        cd ../../
+        
+        ls -lh build/DiaBLE.ipa
     
     - name: Upload IPA
       uses: actions/upload-artifact@v4
