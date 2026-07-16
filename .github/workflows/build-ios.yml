@@ -17,18 +17,14 @@ jobs:
     - name: Select Xcode version
       run: sudo xcode-select --switch /Applications/Xcode.app/Contents/Developer
     
-    - name: Install dependencies (if using CocoaPods)
-      run: |
-        if [ -f "Podfile" ]; then
-          pod install
-        fi
-    
-    - name: Build for testing
+    - name: Install dependencies (if using: Build for testing
       run: |
         xcodebuild -scheme DiaBLE \
           -configuration Release \
           -derivedDataPath build \
           -verbose \
+          CODE_SIGN_IDENTITY="" \
+          CODE_SIGNING_REQUIRED=NO \
           build
     
     - name: Upload build artifacts
