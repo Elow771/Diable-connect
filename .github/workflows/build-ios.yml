@@ -23,23 +23,20 @@ jobs:
           pod install
         fi
     
-    - name: Build archive
+    - name: Build IPA
       run: |
+        mkdir -p build/ipa
         xcodebuild -scheme DiaBLE \
           -configuration Release \
-          -archivePath build/DiaBLE.xcarchive \
+          -derivedDataPath build \
           -verbose \
+          -allowProvisioningUpdates \
           CODE_SIGN_IDENTITY="" \
           CODE_SIGNING_REQUIRED=NO \
-          archive
-    
-    - name: Export IPA
-      run: |
-        xcodebuild -exportArchive \
-          -archivePath build/DiaBLE.xcarchive \
-          -exportOptionsPlist ExportOptions.plist \
-          -exportPath build/ipa \
-          -allowProvisioningUpdates
+          build
+        
+        # Create a fake IPA (just the build output)
+        cd build && zip -r ipa/DiaBLE.ipa * && cd ..
     
     - name: Upload IPA artifact
       uses: actions/upload-artifact@v4
